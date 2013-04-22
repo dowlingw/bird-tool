@@ -4,8 +4,17 @@ use strict;
 use warnings;
 
 use Getopt::Long;
+use Switch;
 
 use birdctl;
+
+use constant NAGIOS_CODES => {
+	'ok'       => { 'retcode' => 0, 'string' => 'OK'       },
+	'warning'  => { 'retcode' => 1, 'string' => 'WARNING'  },
+	'critical' => { 'retcode' => 2, 'string' => 'CRITICAL' },
+	'unknown'  => { 'retcode' => 3, 'string' => 'UNKNOWN' },
+};
+
 
 #-----------------------------------------------------------------------------
 # Initialisation
@@ -19,11 +28,12 @@ my $bird = new birdctl(
 );
 
 # Get any commandline arguments
-our( $opt_AS, $opt_showroutes, $opt_perfdata );
+our( $opt_AS, $opt_showroutes, $opt_perfdata, $opt_nagios );
 GetOptions(
 	'AS=i',
 	'showroutes',
-	'perfdata'
+	'perfdata',
+	'nagios'
 );
 
 
@@ -44,6 +54,7 @@ foreach my $result ( _query($bird,$query) ) {
 	my $as_num = $1;	
 
 	$peers->{$as_num} = {
+		'as'               => $as_num,
 		'session_name'     => $name,
 		'table'            => $table,
 		'routes'           => {},
@@ -76,43 +87,102 @@ foreach my $as ( keys $peers ) {
 
 #-----------------------------------------------------------------------------
 # Output any peer information we have
+
+my $retCode = 0;
 foreach my $as ( keys $peers ) {
 	my $peer = $peers->{$as};
+
+	if( defined $opt_AS && defined $opt_nagios ) {
+		$retCode = nagios($peer);
+		last;
+		
+	} elsif( defined $opt_perfdata ) {
+		print perfdata($peer)."\n";
+
+	} else {
+		outputHuman($peer);
+
+	}
+}
+
+exit $retCode;
+
+
+#-----------------------------------------------------------------------------
+# Output methods
+
+sub nagios {
+	my ($peer) = @_;
+
+	my $nagios_code = 'unknown';
+	switch( $peer->{'state'} ) {
+		case 'Established' { $nagios_code = 'ok'       }
+		case 'Active'      { $nagios_code = 'warning'  }
+		case 'Connect'     { $nagios_code = 'warning'  }
+		case 'Idle'        { $nagios_code = 'warning'  }
+		case 'OpenConfirm' { $nagios_code = 'warning'  }
+		case 'OpenSent'    { $nagios_code = 'warning'  }
+		else               { $nagios_code = 'critical' }
+	}
+
+	# Generate Nagios stdout
+	my $retString = join(' ',
+		'AS'.$peer->{'as'},
+		NAGIOS_CODES->{$nagios_code}->{'string'}.':',
+		$peer->{'state'}
+	).'|';
+
+	# Optionally append perfdata
+	if( defined $opt_perfdata ) {
+		$retString .= perfdata($peer);
+	}
+
+	print $retString."\n";
+	return NAGIOS_CODES->{$nagios_code}->{'retcode'};
+}
+
+sub perfdata {
+	my ($peer) = @_;
 
 	my $num_routes = scalar keys $peer->{'routes'};
 	my $num_filtered_routes = scalar keys $peer->{'filtered_routes'};
 	my $total_routes = $num_routes + $num_filtered_routes;
 
-	if( defined $opt_perfdata ) {
-		print join(' ',
-			"as=$as",
-			"state=$peer->{'state'}",
-			"route_tot=$total_routes",
-			"route_accept=$num_routes",
-			"route_filtered=$num_filtered_routes"
-		)."\n";
-	} else {
-		print "Autonomous System: $as\n";
-		print "\tSession name: $peer->{'session_name'}\n";
-		print "\tSession state: $peer->{'state'}\n";
-		print "\tRoute table name: $peer->{'table'}\n";
-		print "\tTotal routes: $total_routes\n";
-		print "\tAccepted routes: $num_routes\n";
-		if( $opt_showroutes ) {
-			foreach my $route ( keys $peer->{'routes'} ) {
-				print "\t\t$route via $peer->{'routes'}->{$route}\n"
-			}
-		}
-		print "\tFiltered routes: $num_filtered_routes\n";
-		if( $opt_showroutes ) {
-			foreach my $route ( keys $peer->{'filtered_routes'} ) {
-				print "\t\t$route via $peer->{'filtered_routes'}->{$route}\n"
-			}
-		}
-		print "\n"
-	}
+	return join(' ',
+		"as=$peer->{'as'}",
+		"state=$peer->{'state'}",
+		"route_tot=$total_routes",
+		"route_accept=$num_routes",
+		"route_filtered=$num_filtered_routes"
+	);
 }
 
+sub outputHuman {
+	my ($peer) = @_;
+
+	my $num_routes = scalar keys $peer->{'routes'};
+	my $num_filtered_routes = scalar keys $peer->{'filtered_routes'};
+	my $total_routes = $num_routes + $num_filtered_routes;
+
+	print "Autonomous System: $peer->{'as'}\n";
+	print "\tSession name: $peer->{'session_name'}\n";
+	print "\tSession state: $peer->{'state'}\n";
+	print "\tRoute table name: $peer->{'table'}\n";
+	print "\tTotal routes: $total_routes\n";
+	print "\tAccepted routes: $num_routes\n";
+	if( $opt_showroutes ) {
+		foreach my $route ( keys $peer->{'routes'} ) {
+			print "\t\t$route via $peer->{'routes'}->{$route}\n"
+		}
+	}
+	print "\tFiltered routes: $num_filtered_routes\n";
+	if( $opt_showroutes ) {
+		foreach my $route ( keys $peer->{'filtered_routes'} ) {
+			print "\t\t$route via $peer->{'filtered_routes'}->{$route}\n"
+		}
+	}
+	print "\n"
+}
 
 #-----------------------------------------------------------------------------
 # Common methods

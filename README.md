@@ -10,11 +10,13 @@ Useful arguments for the script:
 -    -a ASNUM    Only query session information for the specified AS Number
 -    -s                 Show filtered/accepted prefixes
 -    -p                 Output data in perfdata format for graphing
+-    -a ASNUM -n        Runs as a NAGIOS check, can be combined with -p
 
 Written for the kind folks over at the WAIA for their Australian Internet Exchanges.
 If you need peering in Australia, check them out: http://www.waia.asn.au/
 
 Relies on birdctl perl module from here:
+
 https://github.com/stephank/nagios-bird
 
 
