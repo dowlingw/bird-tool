@@ -9,10 +9,10 @@ use Switch;
 use birdctl;
 
 use constant NAGIOS_CODES => {
-	'ok'       => { 'retcode' => 0, 'string' => 'OK'       },
-	'warning'  => { 'retcode' => 1, 'string' => 'WARNING'  },
-	'critical' => { 'retcode' => 2, 'string' => 'CRITICAL' },
-	'unknown'  => { 'retcode' => 3, 'string' => 'UNKNOWN' },
+	'ok'       => { 'retcode' => 0, 'string' => 'OK',       'multi' => 'Up'      },
+	'warning'  => { 'retcode' => 1, 'string' => 'WARNING',  'multi' => 'Warning' },
+	'critical' => { 'retcode' => 2, 'string' => 'CRITICAL', 'multi' => 'Down'    },
+	'unknown'  => { 'retcode' => 3, 'string' => 'UNKNOWN',  'multi' => 'Unknown' },
 };
 
 
@@ -88,57 +88,87 @@ foreach my $as ( keys $peers ) {
 #-----------------------------------------------------------------------------
 # Output any peer information we have
 
-my $retCode = 0;
+my $nagios = {}; map { $nagios->{$_} = 0 } keys NAGIOS_CODES;
 foreach my $as ( keys $peers ) {
 	my $peer = $peers->{$as};
 
 	if( defined $opt_AS && defined $opt_nagios ) {
-		$retCode = nagios($peer);
-		last;
-		
+		exit nagios_single($peer);
+	} elsif( defined $opt_nagios ) {
+		my $code = nagios_code($peer);
+		$nagios->{$code}++;
 	} elsif( defined $opt_perfdata ) {
 		print perfdata($peer)."\n";
-
 	} else {
 		outputHuman($peer);
-
 	}
 }
 
-exit $retCode;
+if( defined $opt_nagios && !defined $opt_AS ) {
+	exit nagios_multi( $nagios );
+}
 
 
 #-----------------------------------------------------------------------------
 # Output methods
 
-sub nagios {
-	my ($peer) = @_;
+sub nagios_multi {
+	my ($results) = @_;
 
+	# What was the highest error code?
 	my $nagios_code = 'unknown';
-	switch( $peer->{'state'} ) {
-		case 'Established' { $nagios_code = 'ok'       }
-		case 'Active'      { $nagios_code = 'warning'  }
-		case 'Connect'     { $nagios_code = 'warning'  }
-		case 'Idle'        { $nagios_code = 'warning'  }
-		case 'OpenConfirm' { $nagios_code = 'warning'  }
-		case 'OpenSent'    { $nagios_code = 'warning'  }
-		else               { $nagios_code = 'critical' }
-	}
+	$nagios_code = 'ok'       if( $results->{'ok'} > 0       );
+	$nagios_code = 'warning'  if( $results->{'warning'} > 0  );
+	$nagios_code = 'critical' if( $results->{'critical'} > 0 );
+
+	# Generate keyvalue pairs for output
+	my @stats = map { join('=',NAGIOS_CODES->{$_}->{'multi'},$results->{$_}) } keys $results;
 
 	# Generate Nagios stdout
-	my $retString = join(' ',
-		'AS'.$peer->{'as'},
-		NAGIOS_CODES->{$nagios_code}->{'string'}.':',
-		$peer->{'state'}
-	).'|';
+	my $retString = nagios_string(
+		'SESSIONS',
+		$nagios_code,
+		join('; ', @stats),
+		defined($opt_perfdata) ? join(' ', @stats) : undef
+	);
 
-	# Optionally append perfdata
-	if( defined $opt_perfdata ) {
-		$retString .= perfdata($peer);
-	}
-
+	# Generate output
 	print $retString."\n";
 	return NAGIOS_CODES->{$nagios_code}->{'retcode'};
+}
+
+sub nagios_single {
+	my ($peer) = @_;
+
+	my $nagios_code = nagios_code($peer);
+
+	# Generate Nagios stdout
+	my $retString = nagios_string(
+		'AS'.$peer->{'as'},
+		$nagios_code,
+		$peer->{'state'},
+		defined($opt_perfdata) ? perfdata($peer) : undef
+	);
+
+	# Generate output
+	print $retString."\n";
+	return NAGIOS_CODES->{$nagios_code}->{'retcode'};
+}
+
+sub nagios_string {
+	my ($service, $code, $status, $perfdata) = @_;
+
+	my $str = join(' ',
+		$service,
+		NAGIOS_CODES->{$code}->{'string'}.':',
+		$status
+	);
+
+	if( defined $perfdata ) {
+		$str .= ' | '.$perfdata;
+	}
+
+	return $str;
 }
 
 sub perfdata {
@@ -186,6 +216,23 @@ sub outputHuman {
 
 #-----------------------------------------------------------------------------
 # Common methods
+
+sub nagios_code {
+	my ($peer) = @_;
+
+	my $nagios_code = 'unknown';
+	switch( $peer->{'state'} ) {
+		case 'Established' { $nagios_code = 'ok'       }
+		case 'Active'      { $nagios_code = 'warning'  }
+		case 'Connect'     { $nagios_code = 'warning'  }
+		case 'Idle'        { $nagios_code = 'warning'  }
+		case 'OpenConfirm' { $nagios_code = 'warning'  }
+		case 'OpenSent'    { $nagios_code = 'warning'  }
+		else               { $nagios_code = 'critical' }
+	}
+
+	return $nagios_code;
+}
 
 sub extractRoutes {
 	my (@input) = @_;
