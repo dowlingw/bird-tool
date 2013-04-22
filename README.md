@@ -16,3 +16,6 @@ If you need peering in Australia, check them out: http://www.waia.asn.au/
 
 Relies on birdctl perl module from here:
 https://github.com/stephank/nagios-bird
+
+
+[![githalytics.com alpha](https://cruel-carlota.pagodabox.com/d9ffa8693e50ac0e1b3469d29b458974 "githalytics.com")](http://githalytics.com/dowlingw/bird-tool)
