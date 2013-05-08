@@ -19,21 +19,23 @@ use constant NAGIOS_CODES => {
 #-----------------------------------------------------------------------------
 # Initialisation
 
-use constant BIRD_SOCKET => '/var/run/bird.ctl';
+use constant BIRD4_SOCKET  => '/var/run/bird.ctl';
+use constant BIRD6_SOCKET => '/var/run/bird6.ctl';
 use constant ROUTE_PREFIX => 'R_AS';
 
-my $bird = new birdctl(
-  socket => BIRD_SOCKET,
-  restrict => 1,
-);
-
 # Get any commandline arguments
-our( $opt_AS, $opt_showroutes, $opt_perfdata, $opt_nagios );
+our( $opt_AS, $opt_showroutes, $opt_perfdata, $opt_nagios, $opt_6 );
 GetOptions(
 	'AS=i',
 	'showroutes',
 	'perfdata',
-	'nagios'
+	'nagios',
+	'6'
+);
+
+my $bird = new birdctl(
+  socket => ( defined $opt_6 ? BIRD6_SOCKET : BIRD4_SOCKET),
+  restrict => 1,
 );
 
 
