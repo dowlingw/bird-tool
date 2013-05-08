@@ -14,8 +14,11 @@ use constant TEMPLATE_FILE => 'config_template.tt';
 #-----------------------------------------------------------------------------
 # Get input from the user
 
-my $args = {};
 my $term = Term::ReadLine->new('brand');
+my $args = {
+	'as_path' => [],
+	'allowed_prefixes' => []
+};
 
 $args->{'peer_name'} = $term->get_reply(
 	'prompt' => 'Peer Name: ',
@@ -31,6 +34,39 @@ $args->{'peer_ip'} = $term->get_reply(
 	'prompt' => 'IP: ',
 	'allow'  => \&validate_ip
 );
+
+while( 1 ) {
+	my $is_first = ( scalar @{$args->{'as_path'}} == 0 );
+	my $txt = $is_first ? 'First AS in Path' : 'Next AS in Path (or enter to finish)';
+	my $validfunc = $is_first ? \&validate_numeric : \&validate_numericornull ;
+
+	my $next_as = $term->get_reply(
+		'prompt' => "$txt: ",
+		'allow'  => $validfunc
+	);
+
+	if( defined( $next_as ) ) {
+		push( @{$args->{'as_path'}}, $next_as );
+	} elsif( ! $is_first ) {
+		last;
+	}
+}
+
+$args->{'filter_prefixes'} = $term->ask_yn(
+	'prompt'  => 'Filter prefixes?',
+	'default' => 'n'
+);
+if( $args->{'filter_prefixes'} ) {
+	while( 1 ) {
+		my $prefix = $term->get_reply(
+			'prompt' => 'Allow prefix (or enter to finish): ',
+			'allow'  => \&validate_prefixornull
+		);
+		last unless( defined $prefix );
+
+		push( @{$args->{'allowed_prefixes'}}, $prefix );
+	}
+}
 
 print "\n\n";
 
@@ -53,6 +89,16 @@ sub validate_nestring {
 sub validate_numeric {
 	my ($input) = @_;
 	return (defined $input && $input =~ /^\d+$/);
+}
+
+sub validate_numericornull {
+	my ($input) = @_;
+	return (!defined $input || $input =~ /^\d+$/);
+}
+
+sub validate_prefixornull {
+	my ($input) = @_;
+	return 1;
 }
 
 sub validate_ip {

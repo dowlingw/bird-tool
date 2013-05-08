@@ -11,11 +11,13 @@ int set allasn;
         # to collapse.  Recommend evasive manoeuvers.
         if (bgp_path.first != [% peer_asn %] ) then reject;
 
-        allasn = [ [% peer_asn %] ];
+        allasn = [ [% peer_asn %][% FOREACH asn IN as_path %], [% asn %][% END %] ];
         if !(bgp_path.last ~ allasn) then reject;
 
-        allnet = [ 0.0.0.0/0 ];
+	[% IF filter_prefixes %]
+        allnet = [ [% allowed_prefixes.join(', ') %] ];
         if ! (net ~ allnet) then reject;
+	[% END %]
 
         accept;
 }

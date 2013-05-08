@@ -18,7 +18,6 @@ Useful arguments for the script - unless otherwise noted can be combined:
 -    `-n`             Runs as a NAGIOS check, can be combined with -p
 
 Relies on birdctl perl module from here:
-
 https://github.com/stephank/nagios-bird
 
 
