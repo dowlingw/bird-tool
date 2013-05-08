@@ -11,6 +11,7 @@ Script to show peer and prefix information for configured sessions.
 Currently assumes all interesting session names begin with R_AS - this can easily be changed later.
 
 Useful arguments for the script - unless otherwise noted can be combined:
+-    `-help`          Display full usage information
 -    `-a ASNUM`       Only query session information for the specified AS Number
 -    `-s`             Show filtered/accepted prefixes, not compatible with -n or -p
 -    `-p`             Output data in perfdata format for graphing

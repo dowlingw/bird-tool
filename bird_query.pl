@@ -4,6 +4,7 @@ use strict;
 use warnings;
 
 use Getopt::Long;
+use Pod::Usage;
 use Switch;
 
 use birdctl;
@@ -24,14 +25,16 @@ use constant BIRD6_SOCKET => '/var/run/bird6.ctl';
 use constant ROUTE_PREFIX => 'R_AS';
 
 # Get any commandline arguments
-our( $opt_AS, $opt_showroutes, $opt_perfdata, $opt_nagios, $opt_6 );
+our( $opt_AS, $opt_showroutes, $opt_perfdata, $opt_nagios, $opt_6, $opt_help );
 GetOptions(
 	'AS=i',
 	'showroutes',
 	'perfdata',
 	'nagios',
-	'6'
+	'6',
+	'help|?'
 );
+pod2usage(1) if $opt_help;
 
 my $bird = new birdctl(
   socket => ( defined $opt_6 ? BIRD6_SOCKET : BIRD4_SOCKET),
@@ -271,3 +274,43 @@ sub _trim {
 	return $input;
 }
 
+#-----------------------------------------------------------------------------
+# POD Documentation
+
+
+__END__
+
+=head1 NAME
+
+query_bird - Script to show peer and prefix information for configured sessions in BIRD
+
+=head1 SYNOPSIS
+
+query_bird.pl [options]
+
+=head1 OPTIONS
+
+=item B<-help>
+
+Print a brief help message and exits.
+
+
+=item B<-a> AS_NUM
+
+Only query session information for the specified AS Number
+
+=item B<-s>
+
+Show filtered/accepted prefixes, not compatible with -n or -p
+
+=item B<-p>
+
+Output data in perfdata format for graphing
+
+=item B<-n>
+
+Runs as a NAGIOS check, can be combined with -p
+
+=item B<-6>
+
+Query on the socket for IPv6 BIRD
