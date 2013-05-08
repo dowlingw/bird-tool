@@ -1,0 +1,36 @@
+### AS[% peer_asn %] - [% peer_name %]
+table T_AS[% peer_asn %];
+
+filter bgp_in_AS[% peer_asn %]
+prefix set allnet;
+int set allasn;
+{
+        if !(avoid_martians()) then reject;
+
+        # Route servers peering with route servers will cause the universe
+        # to collapse.  Recommend evasive manoeuvers.
+        if (bgp_path.first != [% peer_asn %] ) then reject;
+
+        allasn = [ [% peer_asn %] ];
+        if !(bgp_path.last ~ allasn) then reject;
+
+        allnet = [ 0.0.0.0/0 ];
+        if ! (net ~ allnet) then reject;
+
+        accept;
+}
+
+protocol pipe P_AS[% peer_asn %] from PIPES {
+        description "Pipe for AS[% peer_asn %] - [% peer_name %]";
+        peer table T_AS[% peer_asn %];
+        import filter bgp_in_AS[% peer_asn %];
+        export where bgp_out([% peer_asn %], false);
+}
+
+protocol bgp R_AS[% peerasn %]x1 from WAIX {
+        description "RIB for AS[% peer_asn %] - [% peer_name %]";
+        debug { states, events };
+        neighbor [% peer_ip %] as [% peer_asn %];
+        route limit 10;
+        table T_AS[% peer_asn %];
+}

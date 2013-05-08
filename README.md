@@ -1,7 +1,12 @@
 bird-tool
 =========
 
-Script for providing useful information from BIRD - shows BGP sessions and prefixes.
+Useful scripts for BIRD Route Servers.
+
+
+bird_query.pl
+-------------
+Script to show peer and prefix information for configured sessions.
 
 Currently assumes all interesting session names begin with R_AS - this can easily be changed later.
 Hasn't been tested (yet) with BGPv6, but probably works just fine.
@@ -12,14 +17,16 @@ Useful arguments for the script - unless otherwise noted can be combined:
 -    `-p`             Output data in perfdata format for graphing
 -    `-n`             Runs as a NAGIOS check, can be combined with -p
 
-Written for the kind folks over at the WAIA for their Australian Internet Exchanges.
-
-If you need peering in Australia, check them out: http://www.waia.asn.au/
-
-
 Relies on birdctl perl module from here:
 
 https://github.com/stephank/nagios-bird
+
+
+generate_config.pl
+------------------
+Interactively prompts for information and generates a configuration fragment for a peer.
+
+Configuration fragment is generated using the template `config_template.tt`
 
 
 [![githalytics.com alpha](https://cruel-carlota.pagodabox.com/d9ffa8693e50ac0e1b3469d29b458974 "githalytics.com")](http://githalytics.com/dowlingw/bird-tool)
