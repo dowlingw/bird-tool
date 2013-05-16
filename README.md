@@ -29,30 +29,40 @@ Interactively prompts for information and generates a configuration fragment for
 Configuration fragment is generated using the template `config_template.tt`
 
 
-bird_peerinfo.pl (cacti)
+cacti/scripts/bird_peerinfo.pl
 ------------------------
-A Cacti graph script to translate the output of `bird_tool.pl` for cacti.
+A Cacti graph script to make the output of `bird_tool.pl` accessible for graphing in Cacti.
 
-It will then present the peers as data queries in Cacti - making adding peer graphs easy as clicking "Add Graphs for this Host".
+Because your network may work differently to others, we don't try and run bird-tool
+(which must be run on the same machine as BIRD itself) on your Cacti server.
 
-This is useful for graphing the number of prefixes accepted/filtered.
+Instead, you must set up your own mechanism for exporting the output of `bird_tool.pl -p` to your Cacti host.
+You can do this yourself via Nagios/NRPE, cron or a custom method each time `bird_peerinfo.pl` runs.
 
-
-The script reads in a file with the output of `bird_tool.pl -p` and enumerates the data for each peer.
-By reading from a file we:
--    Avoid hitting BIRD directly for each graph item
+By doing this, we can:
 -    Run Cacti on a separate host to BIRD
+-    Avoid hitting BIRD directly for each graph item
 -    Use whatever mechanism you feel comfortable with sending/receiving graphing data across your network
 
+Script arguments explained:
+-    `-pre SCRIPT`	Runs the specified executable prior to running
+-    `-path PATH`	Path to look for bird-tool output files
+-    `-host IPHOST`	IP/Host Name of the BIRD server used to load the bird-tool output file
+-    `-6`		Indicates that we are interested in the bird-tool output for IPv6
+-    `-index`		(Cacti) Outputs a list of BGP peers in bird-tool output
+-    `-query PROPERTY`	(Cacti) Outputs the bird-tool field to be returned for all peers
+-    `-get PROPERTY AS`	(Cacti) Outputs the bird-tool field to be returned for the specified AS
 
-To get things going, for each route server run `bird_tool.pl -p > /path/to/bird-tool/output/IPADDRESS`.
-For graphing IPv6 information, do the same but with `bird_tool.pl -6 -p > /path/to/bird-tool/output/IPADDRESS_v6`.
+The `bird_peerinfo.pl` script will look for the file `PATH/IPHOST[_v6]` on the local Cacti host.
 
-Once you're shipping the files to the Cacti server, edit the two XML files and change the `-path /path/to/bird-tool/output` setting in `arg_prepend` to the location where you are storing the generated files.
+How to get started:
+-    Run `bird-tool -p > somefile`
+-    Ship the file to your Cacti host (or write a script to pull it with `-pre`
+-    Edit the `cacti/resource/script_queries/bird_peers*.xml` files to set the `-pre` option Cacti will use
+-    Import the XML files as 'Script Data Queries' in Cacti
+-    Profit!
 
-Then you can import the XML files as 'Data Queries' in Cacti and build your graphs accordingly.
-
-*COMING SOON:* Full dataquery/graph/host templates
+Coming Soon: Full set of templates for BIRD route servers using bird-tool
 
 
 

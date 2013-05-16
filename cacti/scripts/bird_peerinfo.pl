@@ -10,15 +10,23 @@ use Getopt::Long;
 #-----------------------------------------------------------------------------
 # Parse the commandline
 
-our( $opt_6, $opt_path, $opt_host, $opt_index, $opt_query, @opt_get );
+our( $opt_6, $opt_pre, $opt_path, $opt_host, $opt_index, $opt_query, @opt_get );
 GetOptions(
 	'6',
+	'pre=s',
 	'path=s',
 	'host=s',
 	'index',
 	'query=s',
 	'get=s{2}' => \@opt_get
 );
+
+# If the user has nominated to run a script first
+if( defined $opt_pre ) {
+	die "Pre-run file does not exist or is not executable" unless( -x $opt_pre );
+	system($opt_pre);
+	die "Pre-run executable did not run cleanly" unless( ($? >> 8) == 0 );
+}
 
 # Generate filename for this datafile
 die "No path specified" unless defined $opt_path;
