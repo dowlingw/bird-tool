@@ -71,7 +71,7 @@ sub cmd_query {
 
 sub cmd_get {
 	my ($peer_data,$type,$as) = @_;
-	die "Invalid AS" unless $as =~ m/^\d+$/;
+	die "Invalid AS" unless( defined $peer_data->{$as} );
 
 	# Validation
 	die "Peer not found" unless defined( $peer_data->{$as} );
@@ -88,6 +88,7 @@ sub get_host_data {
 	my ($file) = @_;
 	my $data;
 
+	# Read in data
 	open( FH, $file ) or die "Could not open data for reading";
 	foreach my $line ( <FH> ) {
 		my $peer = {};
@@ -100,6 +101,22 @@ sub get_host_data {
 		$data->{$peer->{'as'}} = $peer;
 	}
 	close( FH );
+
+	# Provide a virtual peer 'ALL'
+	my $vpeer = { 'as' => 'ALL' };
+	foreach my $key ( keys %{$data} ) {
+		my $peer = $data->{$key};
+
+		foreach my $pk( keys %{$peer} ) {
+			next if( $pk eq 'as' );
+			next unless( $peer->{$pk} =~ m/^\d+$/ );
+			unless( defined $vpeer->{$pk} ) {
+				$vpeer->{$pk} = 0;
+			}
+			$vpeer->{$pk} += $peer->{$pk};
+		}
+	}
+	$data->{'ALL'} = $vpeer;
 
 	return $data;
 }
