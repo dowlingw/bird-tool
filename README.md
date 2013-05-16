@@ -29,6 +29,32 @@ Interactively prompts for information and generates a configuration fragment for
 Configuration fragment is generated using the template `config_template.tt`
 
 
+bird_peerinfo.pl (cacti)
+------------------------
+A Cacti graph script to translate the output of `bird_tool.pl` for cacti.
+
+It will then present the peers as data queries in Cacti - making adding peer graphs easy as clicking "Add Graphs for this Host".
+
+This is useful for graphing the number of prefixes accepted/filtered.
+
+
+The script reads in a file with the output of `bird_tool.pl -p` and enumerates the data for each peer.
+By reading from a file we:
+-    Avoid hitting BIRD directly for each graph item
+-    Run Cacti on a separate host to BIRD
+-    Use whatever mechanism you feel comfortable with sending/receiving graphing data across your network
+
+
+To get things going, for each route server run `bird_tool.pl -p > /path/to/bird-tool/output/IPADDRESS`.
+For graphing IPv6 information, do the same but with `bird_tool.pl -6 -p > /path/to/bird-tool/output/IPADDRESS_v6`.
+
+Once you're shipping the files to the Cacti server, edit the two XML files and change the `-path /path/to/bird-tool/output` setting in `arg_prepend` to the location where you are storing the generated files.
+
+Then you can import the XML files as 'Data Queries' in Cacti and build your graphs accordingly.
+
+*COMING SOON:* Full dataquery/graph/host templates
+
+
 
 Copyright and license
 ---------------------
