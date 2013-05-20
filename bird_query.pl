@@ -93,7 +93,7 @@ foreach my $as ( keys $peers ) {
 #-----------------------------------------------------------------------------
 # Output any peer information we have
 
-my $nagios = {}; map { $nagios->{$_} = 0 } keys NAGIOS_CODES;
+my $nagios = {}; map { $nagios->{$_} = { 'count' => 0, 'peers' => [] } } keys NAGIOS_CODES;
 foreach my $as ( keys $peers ) {
 	my $peer = $peers->{$as};
 
@@ -101,7 +101,8 @@ foreach my $as ( keys $peers ) {
 		exit nagios_single($peer);
 	} elsif( defined $opt_nagios ) {
 		my $code = nagios_code($peer);
-		$nagios->{$code}++;
+		$nagios->{$code}->{'count'}++;
+		push( @{$nagios->{$code}->{'peers'}}, $peer );
 	} elsif( defined $opt_perfdata ) {
 		print perfdata($peer)."\n";
 	} else {
@@ -122,18 +123,32 @@ sub nagios_multi {
 
 	# What was the highest error code?
 	my $nagios_code = 'unknown';
-	$nagios_code = 'ok'       if( $results->{'ok'} > 0       );
-	$nagios_code = 'warning'  if( $results->{'warning'} > 0  );
-	$nagios_code = 'critical' if( $results->{'critical'} > 0 );
+	$nagios_code = 'ok'       if( $results->{'ok'}->{'count'} > 0       );
+	$nagios_code = 'warning'  if( $results->{'warning'}->{'count'} > 0  );
+	$nagios_code = 'critical' if( $results->{'critical'}->{'count'} > 0 );
 
 	# Generate keyvalue pairs for output
-	my @stats = map { join('=',NAGIOS_CODES->{$_}->{'multi'},$results->{$_}) } keys $results;
+	my @stats = map { join('=',NAGIOS_CODES->{$_}->{'multi'},$results->{$_}->{'count'}) } keys $results;
+	my $statString = join('; ', @stats).'.';
+
+	# List any busted AS by category
+	foreach my $type ( keys $results ) {
+		next if( $type eq 'ok' );
+		next unless( scalar @{$results->{$type}->{'peers'}} > 0 );
+
+		my @peers = ();
+		foreach my $peer ( @{$results->{$type}->{'peers'}} ) {
+			push( @peers, "AS".$peer->{'as'} );
+		}
+
+		$statString .= ' '.NAGIOS_CODES->{$type}->{'multi'}.'('. join(',', @peers).')';
+	}
 
 	# Generate Nagios stdout
 	my $retString = nagios_string(
 		'SESSIONS',
 		$nagios_code,
-		join('; ', @stats),
+		$statString,
 		defined($opt_perfdata) ? join(' ', @stats) : undef
 	);
 
