@@ -36,20 +36,12 @@ $args->{'peer_ip'} = $term->get_reply(
 );
 
 while( 1 ) {
-	my $is_first = ( scalar @{$args->{'as_path'}} == 0 );
-	my $txt = $is_first ? 'First AS in Path' : 'Next AS in Path (or enter to finish)';
-	my $validfunc = $is_first ? \&validate_numeric : \&validate_numericornull ;
-
 	my $next_as = $term->get_reply(
-		'prompt' => "$txt: ",
-		'allow'  => $validfunc
+		'prompt' => 'Next AS in Path (or enter to finish): ',
+		'allow'  => \&validate_numericornull
 	);
-
-	if( defined( $next_as ) ) {
-		push( @{$args->{'as_path'}}, $next_as );
-	} elsif( ! $is_first ) {
-		last;
-	}
+	last if( !defined( $next_as ) );
+	push( @{$args->{'as_path'}}, $next_as );
 }
 
 $args->{'filter_prefixes'} = $term->ask_yn(
