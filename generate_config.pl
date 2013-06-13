@@ -3,6 +3,7 @@
 use strict;
 use warnings;
 
+use Getopt::Long;
 use Net::IP;
 use Template;
 
@@ -10,6 +11,18 @@ use Term::UI;
 use Term::ReadLine;
 
 use constant TEMPLATE_FILE => 'config_template.tt';
+
+
+#-----------------------------------------------------------------------------
+# Read in commandline options
+
+our( $opt_template );
+GetOptions( 'template=s' );
+
+# See if a template was specified
+$opt_template = $opt_template || TEMPLATE_FILE;
+die "Template does not exist or is not readable" unless( -e $opt_template && -R $opt_templtae );
+
 
 #-----------------------------------------------------------------------------
 # Get input from the user
@@ -67,7 +80,7 @@ print "\n\n";
 # Generate and output the configuration fragment
 
 my $tt = Template->new();
-$tt->process(TEMPLATE_FILE, $args );
+$tt->process($opt_template, $args );
 
 
 #-----------------------------------------------------------------------------
