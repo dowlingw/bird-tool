@@ -3,6 +3,9 @@
 use strict;
 use warnings;
 
+use Date::Parse;
+use DateTime;
+use DateTime::Format::Duration;
 use Getopt::Long;
 use Pod::Usage;
 use Switch;
@@ -45,6 +48,8 @@ my $bird = new birdctl(
 #-----------------------------------------------------------------------------
 # Grab a list of peers
 
+my $now = DateTime->now();
+
 my $peers = {};
 my $query = 'show protocols "'.ROUTE_PREFIX . ($opt_AS||'').'*"';
 foreach my $result ( _query($bird,$query) ) {
@@ -58,13 +63,18 @@ foreach my $result ( _query($bird,$query) ) {
 	next unless( $name =~ m/^R_AS(\S+)x1/ );
 	my $as_num = $1;	
 
+	# Calculate session uptime
+	my $start = DateTime->from_epoch( epoch => str2time( $since ) );
+	my $uptime = $now->subtract_datetime_absolute($start);
+
 	$peers->{$as_num} = {
 		'as'               => $as_num,
 		'session_name'     => $name,
 		'table'            => $table,
 		'routes'           => {},
 		'filtered_routes'  => {},
-		'state'		   => $info
+		'state'		   => $info,
+		'uptime'           => $uptime
 	};
 }
 
@@ -217,6 +227,7 @@ sub outputHuman {
 	print "Autonomous System: $peer->{'as'}\n";
 	print "\tSession name: $peer->{'session_name'}\n";
 	print "\tSession state: $peer->{'state'}\n";
+	print "\tUptime: "._fmtDuration($peer->{'uptime'})."\n";
 	print "\tRoute table name: $peer->{'table'}\n";
 	print "\tTotal routes: $total_routes\n";
 	print "\tAccepted routes: $num_routes\n";
@@ -287,6 +298,17 @@ sub _trim {
 	$input =~ s/^\s*//g;	
 	$input =~ s/\s*$//g;	
 	return $input;
+}
+
+sub _fmtDuration {
+	my ($duration) = @_;
+
+	my $f = DateTime::Format::Duration->new(
+		pattern => '%Yy, %mm, %ed, %kh, %Mm, %Ss',
+		normalize => 'ISO'
+	);
+
+	return $f->format_duration($duration);
 }
 
 #-----------------------------------------------------------------------------
