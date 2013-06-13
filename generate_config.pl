@@ -21,7 +21,7 @@ GetOptions( 'template=s' );
 
 # See if a template was specified
 $opt_template = $opt_template || TEMPLATE_FILE;
-die "Template does not exist or is not readable" unless( -e $opt_template && -R $opt_templtae );
+die "Template does not exist or is not readable" unless( -e $opt_template && -R $opt_template );
 
 
 #-----------------------------------------------------------------------------
