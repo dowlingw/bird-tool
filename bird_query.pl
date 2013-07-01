@@ -28,13 +28,14 @@ use constant BIRD6_SOCKET => '/var/run/bird6.ctl';
 use constant ROUTE_PREFIX => 'R_AS';
 
 # Get any commandline arguments
-our( $opt_AS, $opt_showroutes, $opt_perfdata, $opt_nagios, $opt_6, $opt_help );
+our( $opt_AS, $opt_showroutes, $opt_perfdata, $opt_nagios, $opt_6, $opt_help, $opt_x );
 GetOptions(
 	'AS=i',
 	'showroutes',
 	'perfdata',
 	'nagios',
 	'6',
+	'x',
 	'help|?'
 );
 pod2usage(1) if $opt_help;
@@ -107,7 +108,10 @@ my $nagios = {}; map { $nagios->{$_} = { 'count' => 0, 'peers' => [] } } keys NA
 foreach my $as ( keys $peers ) {
 	my $peer = $peers->{$as};
 
-	if( defined $opt_AS && defined $opt_nagios ) {
+	if( defined $opt_x ) {
+		next if( defined($opt_AS) && $opt_AS ne $as );
+		outputPrefixes($peer);
+	} elsif( defined $opt_AS && defined $opt_nagios ) {
 		exit nagios_single($peer);
 	} elsif( defined $opt_nagios ) {
 		my $code = nagios_code($peer);
@@ -247,6 +251,14 @@ sub outputHuman {
 	print "\n"
 }
 
+sub outputPrefixes {
+	my ($peer) = @_;
+
+	foreach my $route ( keys $peer->{'routes'} ) {
+		print "$route\n"
+	}
+}
+
 #-----------------------------------------------------------------------------
 # Common methods
 
@@ -353,3 +365,7 @@ Runs as a NAGIOS check, can be combined with -p
 =item B<-6>
 
 Query on the socket for IPv6 BIRD
+
+=item B<-x>
+
+Output a list of accepted prefixes, one per line. Not compatible with -s, -n or -p

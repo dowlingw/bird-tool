@@ -13,10 +13,11 @@ Currently assumes all interesting session names begin with R_AS - this can easil
 Useful arguments for the script - unless otherwise noted can be combined:
 -    `-help`          Display full usage information
 -    `-a ASNUM`       Only query session information for the specified AS Number
--    `-s`             Show filtered/accepted prefixes, not compatible with -n or -p
+-    `-s`             Show filtered/accepted prefixes, not compatible with `-n` or `-p`
 -    `-p`             Output data in perfdata format for graphing
--    `-n`             Runs as a NAGIOS check, can be combined with -p
+-    `-n`             Runs as a NAGIOS check, can be combined with `-p`
 -    `-6`             Query on the socket for IPv6 BIRD
+-    `-x`             Output a list of accepted prefixes, one per line. Not compatible with `-s`, `-n` or `-p`
 
 Relies on birdctl perl module from here:
 https://github.com/stephank/nagios-bird
