@@ -207,13 +207,15 @@ sub perfdata {
 	my $num_routes = scalar keys $peer->{'routes'};
 	my $num_filtered_routes = scalar keys $peer->{'filtered_routes'};
 	my $total_routes = $num_routes + $num_filtered_routes;
+	my $uptime = $peer->{'uptime'}->in_units('seconds');
 
 	return join(' ',
 		"as=$peer->{'as'}",
 		"state=$peer->{'state'}",
 		"route_tot=$total_routes",
 		"route_accept=$num_routes",
-		"route_filtered=$num_filtered_routes"
+		"route_filtered=$num_filtered_routes",
+		"uptime=$uptime"
 	);
 }
 
