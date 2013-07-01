@@ -82,7 +82,7 @@ foreach my $result ( _query($bird,$query) ) {
 foreach my $as ( keys $peers ) {
 	my $peer = $peers->{$as};
 
-	my $query = "show route protocol ".$peer->{'session_name'};
+	my $query = "show route table master protocol ".$peer->{'session_name'};
 	$peers->{$as}->{'routes'} = extractRoutes( _query($bird,$query) );
 }
 
@@ -90,7 +90,7 @@ foreach my $as ( keys $peers ) {
 foreach my $as ( keys $peers ) {
 	my $peer = $peers->{$as};
 
-	my $query = "show route table ". $peer->{'table'} ." protocol ".$peer->{'session_name'};
+	my $query = "show route protocol ".$peer->{'session_name'};
 	my $routes = extractRoutes( _query($bird,$query) );
 
 	# List this as filtered if it wasnt in the list of accepted routes
