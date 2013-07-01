@@ -79,8 +79,8 @@ print "\n\n";
 #-----------------------------------------------------------------------------
 # Generate and output the configuration fragment
 
-my $tt = Template->new();
-$tt->process($opt_template, $args );
+my $tt = Template->new( RELATIVE => 1 );
+$tt->process($opt_template, $args ) || die $tt->error();
 
 
 #-----------------------------------------------------------------------------
