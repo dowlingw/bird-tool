@@ -79,7 +79,7 @@ print "\n\n";
 #-----------------------------------------------------------------------------
 # Generate and output the configuration fragment
 
-my $tt = Template->new( RELATIVE => 1 );
+my $tt = Template->new( RELATIVE => 1, ABSOLUTE => 1 );
 $tt->process($opt_template, $args ) || die $tt->error();
 
 
