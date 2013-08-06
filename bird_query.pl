@@ -10,7 +10,7 @@ use Getopt::Long;
 use Pod::Usage;
 use Switch;
 
-use birdctl;
+use Bird;
 
 use constant NAGIOS_CODES => {
 	'ok'       => { 'retcode' => 0, 'string' => 'OK',       'multi' => 'Up'      },
@@ -40,7 +40,7 @@ GetOptions(
 );
 pod2usage(1) if $opt_help;
 
-my $bird = new birdctl(
+my $bird = new Bird(
   socket => ( defined $opt_6 ? BIRD6_SOCKET : BIRD4_SOCKET),
   restrict => 1,
 );

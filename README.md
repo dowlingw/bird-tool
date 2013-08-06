@@ -4,6 +4,23 @@ bird-tool
 Useful scripts for BIRD Route Servers.
 
 
+Dependencies
+------------
+These scripts rely on the following CPAN modules:
+-    Date::Parse
+-    DateTime
+-    DateTime::Format::Duration
+-    Net::IP
+-    Switch
+-    Template
+
+You can install these dependencies via the following command:
+`cpan Date::Parse DateTime DateTime::Format::Duration Net::IP Switch Template`
+
+Or, if you are running a Debian-based Linux system with the following:
+`apt-get install libtimedate-perl libdatetime-perl libdatetime-format-duration-perl libnet-ip-perl libswitch-perl libtemplate-perl`
+
+
 bird_query.pl
 -------------
 Script to show peer and prefix information for configured sessions.
@@ -19,8 +36,7 @@ Useful arguments for the script - unless otherwise noted can be combined:
 -    `-6`             Query on the socket for IPv6 BIRD
 -    `-x`             Output a list of accepted prefixes, one per line. Not compatible with `-s`, `-n` or `-p`
 
-Relies on birdctl perl module from here:
-https://github.com/stephank/nagios-bird
+This module now provides its own IPC with BIRD daemon via the birdc command.
 
 
 generate_config.pl
