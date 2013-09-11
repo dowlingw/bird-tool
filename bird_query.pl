@@ -287,7 +287,7 @@ sub extractRoutes {
 		$line = _trim( $line );
 		$line =~ s/^1007-//g;
 
-		next unless $line =~ m/(\S+)\s*via.*\[AS(\d+)i\]$/;
+		next unless $line =~ m/(\S+)\s*via.*\[AS(\d+)[i\?]\]$/;
 		my ($route,$origin_as) = ($1,$2);
 
 		$routes->{$route} = $origin_as;
