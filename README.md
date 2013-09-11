@@ -15,10 +15,12 @@ These scripts rely on the following CPAN modules:
 -    Template
 
 You can install these dependencies via the following command:
-`cpan Date::Parse DateTime DateTime::Format::Duration Net::IP Switch Template`
+
+    cpan Date::Parse DateTime DateTime::Format::Duration Net::IP Switch Template
 
 Or, if you are running a Debian-based Linux system with the following:
-`apt-get install libtimedate-perl libdatetime-perl libdatetime-format-duration-perl libnet-ip-perl libswitch-perl libtemplate-perl`
+
+    apt-get install libtimedate-perl libdatetime-perl libdatetime-format-duration-perl libnet-ip-perl libswitch-perl libtemplate-perl
 
 
 bird_query.pl
