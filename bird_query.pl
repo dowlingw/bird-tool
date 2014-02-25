@@ -28,7 +28,7 @@ use constant BIRD6_SOCKET => '/var/run/bird6.ctl';
 use constant ROUTE_PREFIX => 'R_AS';
 
 # Get any commandline arguments
-our( $opt_AS, $opt_showroutes, $opt_perfdata, $opt_nagios, $opt_6, $opt_help, $opt_x );
+our( $opt_AS, $opt_showroutes, $opt_perfdata, $opt_nagios, $opt_6, $opt_help, $opt_x, $opt_l );
 GetOptions(
 	'AS=i',
 	'showroutes',
@@ -36,6 +36,7 @@ GetOptions(
 	'nagios',
 	'6',
 	'x',
+	'l',
 	'help|?'
 );
 pod2usage(1) if $opt_help;
@@ -108,7 +109,9 @@ my $nagios = {}; map { $nagios->{$_} = { 'count' => 0, 'peers' => [] } } keys NA
 foreach my $as ( keys $peers ) {
 	my $peer = $peers->{$as};
 
-	if( defined $opt_x ) {
+	if( defined $opt_l ) {
+		print $as."\n";
+	} elsif( defined $opt_x ) {
 		next if( defined($opt_AS) && $opt_AS ne $as );
 		outputPrefixes($peer);
 	} elsif( defined $opt_AS && defined $opt_nagios ) {
@@ -369,3 +372,7 @@ Query on the socket for IPv6 BIRD
 =item B<-x>
 
 Output a list of accepted prefixes, one per line. Not compatible with -s, -n or -p
+
+=item B<-l>
+
+Output a list of peered ASNs, one per line. Not compatible with any other option
