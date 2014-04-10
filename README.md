@@ -1,3 +1,4 @@
+[![Stories in Ready](https://badge.waffle.io/dowlingw/bird-tool.png?label=ready&title=Ready)](https://waffle.io/dowlingw/bird-tool)
 bird-tool
 =========
 
