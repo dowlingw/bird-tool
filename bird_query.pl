@@ -23,12 +23,12 @@ use constant NAGIOS_CODES => {
 #-----------------------------------------------------------------------------
 # Initialisation
 
-use constant BIRD4_SOCKET  => '/var/run/bird.ctl';
+use constant BIRD4_SOCKET => '/var/run/bird.ctl';
 use constant BIRD6_SOCKET => '/var/run/bird6.ctl';
 use constant ROUTE_PREFIX => 'R_AS';
 
 # Get any commandline arguments
-our( $opt_AS, $opt_showroutes, $opt_perfdata, $opt_nagios, $opt_6, $opt_help, $opt_x, $opt_l );
+our( $opt_AS, $opt_showroutes, $opt_perfdata, $opt_nagios, $opt_6, $opt_help, $opt_x, $opt_l, $opt_j );
 GetOptions(
 	'AS=i',
 	'showroutes',
@@ -37,6 +37,7 @@ GetOptions(
 	'6',
 	'x',
 	'l',
+	'j', # j is for joe
 	'help|?'
 );
 pod2usage(1) if $opt_help;
@@ -84,7 +85,7 @@ foreach my $result ( _query($bird,$query) ) {
 foreach my $as ( keys $peers ) {
 	my $peer = $peers->{$as};
 
-	my $query = "show route table master protocol ".$peer->{'session_name'};
+	my $query = "show route table master protocol ".$peer->{'session_name'}." all";
 	$peers->{$as}->{'routes'} = extractRoutes( _query($bird,$query) );
 }
 
@@ -102,6 +103,7 @@ foreach my $as ( keys $peers ) {
 	}
 }
 
+
 #-----------------------------------------------------------------------------
 # Output any peer information we have
 
@@ -113,7 +115,7 @@ foreach my $as ( keys $peers ) {
 		print $as."\n";
 	} elsif( defined $opt_x ) {
 		next if( defined($opt_AS) && $opt_AS ne $as );
-		outputPrefixes($peer);
+		outputPrefixes($peer, $opt_j);
 	} elsif( defined $opt_AS && defined $opt_nagios ) {
 		exit nagios_single($peer);
 	} elsif( defined $opt_nagios ) {
@@ -242,23 +244,29 @@ sub outputHuman {
 	print "\tAccepted routes: $num_routes\n";
 	if( $opt_showroutes ) {
 		foreach my $route ( keys $peer->{'routes'} ) {
-			print "\t\t$route via $peer->{'routes'}->{$route}\n"
+			print "\t\t$route via $peer->{'routes'}->{$route}->{'origin_as'}\n"
 		}
 	}
 	print "\tFiltered routes: $num_filtered_routes\n";
 	if( $opt_showroutes ) {
 		foreach my $route ( keys $peer->{'filtered_routes'} ) {
-			print "\t\t$route via $peer->{'filtered_routes'}->{$route}\n"
+			print "\t\t$route via $peer->{'filtered_routes'}->{$route}->{'origin_as'}\n"
 		}
 	}
 	print "\n"
 }
 
 sub outputPrefixes {
-	my ($peer) = @_;
+	my ($peer, $opt_j) = @_;
 
 	foreach my $route ( keys $peer->{'routes'} ) {
-		print "$route\n"
+		my $str = $route;
+
+		if( defined $opt_j ) {
+			$str .= "\t".($peer->{'routes'}->{$route}->{'path'} || "");
+		}
+
+		print $str."\n";
 	}
 }
 
@@ -286,14 +294,23 @@ sub extractRoutes {
 	my (@input) = @_;
 	my $routes = {};
 
+	my $r = undef;
 	foreach my $line ( @input ) {
 		$line = _trim( $line );
 		$line =~ s/^1007-//g;
 
-		next unless $line =~ m/(\S+)\s*via.*\[AS(\d+)[i\?]\]$/;
-		my ($route,$origin_as) = ($1,$2);
-
-		$routes->{$route} = $origin_as;
+		if( $line =~ m/(\S+)\s*via.*\[AS(\d+)[i\?]\]$/ ) {
+			my ($route,$origin_as) = ($1,$2);
+			$r = {
+				'route'		=> $route,
+				'origin_as'	=> $origin_as,
+				'path'		=> undef
+			};
+			$routes->{$route} = $r;
+		} elsif( $line =~ m/BGP.as_path: (.*)$/ ) {
+			my ($as_path) = ($1);
+			$r->{'path'} = $as_path;
+		}
 	}
 
 	return $routes;
@@ -372,6 +389,10 @@ Query on the socket for IPv6 BIRD
 =item B<-x>
 
 Output a list of accepted prefixes, one per line. Not compatible with -s, -n or -p
+
+=item B<-j>
+
+Joe mode, includes the AS Path in the output of -x.
 
 =item B<-l>
 
