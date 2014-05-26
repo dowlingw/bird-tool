@@ -26,6 +26,7 @@ use constant NAGIOS_CODES => {
 use constant BIRD4_SOCKET => '/var/run/bird.ctl';
 use constant BIRD6_SOCKET => '/var/run/bird6.ctl';
 use constant ROUTE_PREFIX => 'R_AS';
+use constant ROUTE_SUFFIX => 'x1';
 
 # Get any commandline arguments
 our( $opt_AS, $opt_showroutes, $opt_perfdata, $opt_nagios, $opt_6, $opt_help, $opt_x, $opt_l, $opt_j, $opt_o );
@@ -55,7 +56,8 @@ my $bird = new Bird(
 my $now = DateTime->now();
 
 my $peers = {};
-my $query = 'show protocols "'.ROUTE_PREFIX . ($opt_AS||'').'*"';
+my $as_pattern = defined($opt_AS) ? $opt_AS.ROUTE_SUFFIX : '*';
+my $query = 'show protocols "'.ROUTE_PREFIX.$as_pattern.'"';
 foreach my $result ( _query($bird,$query) ) {
 	$result = _trim($result);
 	$result =~ s/^1002-//g;	# dodgy hack to avoid section headers from barfing first peer, todo this right
