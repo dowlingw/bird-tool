@@ -28,7 +28,7 @@ use constant BIRD6_SOCKET => '/var/run/bird6.ctl';
 use constant ROUTE_PREFIX => 'R_AS';
 
 # Get any commandline arguments
-our( $opt_AS, $opt_showroutes, $opt_perfdata, $opt_nagios, $opt_6, $opt_help, $opt_x, $opt_l, $opt_j );
+our( $opt_AS, $opt_showroutes, $opt_perfdata, $opt_nagios, $opt_6, $opt_help, $opt_x, $opt_l, $opt_j, $opt_o );
 GetOptions(
 	'AS=i',
 	'showroutes',
@@ -38,6 +38,7 @@ GetOptions(
 	'x',
 	'l',
 	'j', # j is for joe
+	'o',
 	'help|?'
 );
 pod2usage(1) if $opt_help;
@@ -107,35 +108,58 @@ foreach my $as ( keys $peers ) {
 #-----------------------------------------------------------------------------
 # Output any peer information we have
 
-my $nagios = {}; map { $nagios->{$_} = { 'count' => 0, 'peers' => [] } } keys NAGIOS_CODES;
-foreach my $as ( keys $peers ) {
-	my $peer = $peers->{$as};
-
-	if( defined $opt_l ) {
-		print $as."\n";
-	} elsif( defined $opt_x ) {
-		next if( defined($opt_AS) && $opt_AS ne $as );
-		outputPrefixes($peer, $opt_j);
-	} elsif( defined $opt_AS && defined $opt_nagios ) {
-		exit nagios_single($peer);
-	} elsif( defined $opt_nagios ) {
-		my $code = nagios_code($peer);
-		$nagios->{$code}->{'count'}++;
-		push( @{$nagios->{$code}->{'peers'}}, $peer );
-	} elsif( defined $opt_perfdata ) {
-		print perfdata($peer)."\n";
-	} else {
-		outputHuman($peer);
+if( defined $opt_o ) {
+	outputOriginAs($peers);
+} else {
+	my $nagios = {}; map { $nagios->{$_} = { 'count' => 0, 'peers' => [] } } keys NAGIOS_CODES;
+	foreach my $as ( keys $peers ) {
+		my $peer = $peers->{$as};
+	
+		if( defined $opt_l ) {
+			print $as."\n";
+		} elsif( defined $opt_x ) {
+			next if( defined($opt_AS) && $opt_AS ne $as );
+			outputPrefixes($peer, $opt_j);
+		} elsif( defined $opt_AS && defined $opt_nagios ) {
+			exit nagios_single($peer);
+		} elsif( defined $opt_nagios ) {
+			my $code = nagios_code($peer);
+			$nagios->{$code}->{'count'}++;
+			push( @{$nagios->{$code}->{'peers'}}, $peer );
+		} elsif( defined $opt_perfdata ) {
+			print perfdata($peer)."\n";
+		} else {
+			outputHuman($peer);
+		}
 	}
-}
-
-if( defined $opt_nagios && !defined $opt_AS ) {
-	exit nagios_multi( $nagios );
+	
+	if( defined $opt_nagios && !defined $opt_AS ) {
+		exit nagios_multi( $nagios );
+	}
 }
 
 
 #-----------------------------------------------------------------------------
 # Output methods
+
+sub outputOriginAs {
+	my ($peers) = @_;
+
+	my $as_list = {};
+	foreach my $pKey ( keys $peers ) {
+		my $peer = $peers->{$pKey};
+
+		$as_list->{$peer->{'as'}} = 1;
+
+		foreach my $rKey ( keys $peer->{'routes'} ) {
+			my $route = $peer->{'routes'}->{$rKey};
+
+			$as_list->{$route->{'origin_as'}} = 1;
+		}
+	}
+
+	print join("\n", sort keys %{$as_list} )."\n";
+}
 
 sub nagios_multi {
 	my ($results) = @_;
@@ -397,3 +421,7 @@ Joe mode, includes the AS Path in the output of -x.
 =item B<-l>
 
 Output a list of peered ASNs, one per line. Not compatible with any other option
+
+=item B<-o>
+
+Like -l but includes originating AS systems for which BIRD has accepted one or more prefixes on
