@@ -39,6 +39,8 @@ Useful arguments for the script - unless otherwise noted can be combined:
 -    `-n`             Runs as a NAGIOS check, can be combined with `-p`
 -    `-6`             Query on the socket for IPv6 BIRD
 -    `-x`             Output a list of accepted prefixes, one per line. Not compatible with `-s`, `-n` or `-p`
+-    `-j`             Joe mode, includes the AS Path in the output of `-x`
+-    `-l`             Output a list of peered ASNs, one per line. Not compatible with any other option
 
 This module now provides its own IPC with BIRD daemon via the birdc command.
 
