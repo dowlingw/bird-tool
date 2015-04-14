@@ -42,6 +42,8 @@ Useful arguments for the script - unless otherwise noted can be combined:
 -    `-j`             Joe mode, includes the AS Path in the output of `-x`
 -    `-l`             Output a list of peered ASNs, one per line. Not compatible with any other option
 -    `-o`             Like `-l` but includes originating AS systems for which BIRD has accepted one or more prefixes on
+-    `-f`             Only show peers with one or more filtered routes. Compatible with everything except `-o`
+-    `-y`             Yolo mode. Only compatible with `-s`, doesn't show accepted prefixes because life's too short.
 
 This module now provides its own IPC with BIRD daemon via the birdc command.
 
