@@ -29,7 +29,7 @@ use constant ROUTE_PREFIX => 'R_AS';
 use constant ROUTE_SUFFIX => 'x1';
 
 # Get any commandline arguments
-our( $opt_AS, $opt_showroutes, $opt_perfdata, $opt_nagios, $opt_6, $opt_help, $opt_x, $opt_l, $opt_j, $opt_o );
+our( $opt_AS, $opt_showroutes, $opt_perfdata, $opt_nagios, $opt_6, $opt_help, $opt_x, $opt_l, $opt_j, $opt_o, $opt_f, $opt_yolo );
 GetOptions(
 	'AS=i',
 	'showroutes',
@@ -40,6 +40,8 @@ GetOptions(
 	'l',
 	'j', # j is for joe
 	'o',
+	'f',
+	'yolo',
 	'help|?'
 );
 pod2usage(1) if $opt_help;
@@ -116,6 +118,10 @@ if( defined $opt_o ) {
 	my $nagios = {}; map { $nagios->{$_} = { 'count' => 0, 'peers' => [] } } keys NAGIOS_CODES;
 	foreach my $as ( keys $peers ) {
 		my $peer = $peers->{$as};
+
+		if( defined $opt_f ) {
+			next unless( scalar keys $peer->{'filtered_routes'} > 0 );
+		}
 	
 		if( defined $opt_l ) {
 			print $as."\n";
@@ -268,7 +274,7 @@ sub outputHuman {
 	print "\tRoute table name: $peer->{'table'}\n";
 	print "\tTotal routes: $total_routes\n";
 	print "\tAccepted routes: $num_routes\n";
-	if( $opt_showroutes ) {
+	if( $opt_showroutes && ! $opt_yolo ) {
 		foreach my $route ( keys $peer->{'routes'} ) {
 			print "\t\t$route via $peer->{'routes'}->{$route}->{'origin_as'}\n"
 		}
@@ -422,8 +428,16 @@ Joe mode, includes the AS Path in the output of -x.
 
 =item B<-l>
 
-Output a list of peered ASNs, one per line. Not compatible with any other option
+Output a list of peered ASNs, one per line. Only compatible with -f.
 
 =item B<-o>
 
 Like -l but includes originating AS systems for which BIRD has accepted one or more prefixes on
+
+=item B<-f>
+
+Only show peers with one or more filtered routes. Compatible with everything except -o
+
+=item B<-y>
+
+Yolo mode. Only compatible with -s, doesn't show accepted prefixes because life's too short.
