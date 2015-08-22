@@ -26,7 +26,7 @@ use constant NAGIOS_CODES => {
 use constant BIRD4_SOCKET => '/var/run/bird.ctl';
 use constant BIRD6_SOCKET => '/var/run/bird6.ctl';
 use constant ROUTE_PREFIX => 'R_AS';
-use constant ROUTE_SUFFIX => 'x1';
+use constant ROUTE_SUFFIX => 'x*';
 
 # Get any commandline arguments
 our( $opt_AS, $opt_showroutes, $opt_perfdata, $opt_nagios, $opt_6, $opt_help, $opt_x, $opt_l, $opt_j, $opt_o, $opt_f, $opt_yolo );
@@ -68,14 +68,14 @@ foreach my $result ( _query($bird,$query) ) {
 	my ($name,$proto,$table,$state,$since,$info) = ($1,$2,$3,$4,$5,$6);
 
 	# Check this is an AS session we care about
-	next unless( $name =~ m/^R_AS(\S+)x1/ );
+	next unless( $name =~ m/^R_AS(\S+)x\d+/ );
 	my $as_num = $1;	
 
 	# Calculate session uptime
 	my $start = DateTime->from_epoch( epoch => str2time( $since ) );
 	my $uptime = $now->subtract_datetime_absolute($start);
 
-	$peers->{$as_num} = {
+	$peers->{$name} = {
 		'as'               => $as_num,
 		'session_name'     => $name,
 		'table'            => $table,
@@ -87,16 +87,16 @@ foreach my $result ( _query($bird,$query) ) {
 }
 
 # Get list of accepted routes
-foreach my $as ( keys $peers ) {
-	my $peer = $peers->{$as};
+foreach my $key ( keys $peers ) {
+	my $peer = $peers->{$key};
 
 	my $query = "show route table master protocol ".$peer->{'session_name'}." all";
-	$peers->{$as}->{'routes'} = extractRoutes( _query($bird,$query) );
+	$peers->{$key}->{'routes'} = extractRoutes( _query($bird,$query) );
 }
 
 # Get list of filtered routes
-foreach my $as ( keys $peers ) {
-	my $peer = $peers->{$as};
+foreach my $key ( keys $peers ) {
+	my $peer = $peers->{$key};
 
 	my $query = "show route protocol ".$peer->{'session_name'};
 	my $routes = extractRoutes( _query($bird,$query) );
@@ -116,17 +116,17 @@ if( defined $opt_o ) {
 	outputOriginAs($peers);
 } else {
 	my $nagios = {}; map { $nagios->{$_} = { 'count' => 0, 'peers' => [] } } keys NAGIOS_CODES;
-	foreach my $as ( keys $peers ) {
-		my $peer = $peers->{$as};
+	foreach my $key ( keys $peers ) {
+		my $peer = $peers->{$key};
 
 		if( defined $opt_f ) {
 			next unless( scalar keys $peer->{'filtered_routes'} > 0 );
 		}
 	
 		if( defined $opt_l ) {
-			print $as."\n";
+			print $peer->{'as'}."\n";
 		} elsif( defined $opt_x ) {
-			next if( defined($opt_AS) && $opt_AS ne $as );
+			next if( defined($opt_AS) && $opt_AS ne $peer->{'as'} );
 			outputPrefixes($peer, $opt_j);
 		} elsif( defined $opt_AS && defined $opt_nagios ) {
 			exit nagios_single($peer);
