@@ -116,6 +116,7 @@ if( defined $opt_o ) {
 	outputOriginAs($peers);
 } else {
 	my $nagios = {}; map { $nagios->{$_} = { 'count' => 0, 'peers' => [] } } keys NAGIOS_CODES;
+	my @optx = ();
 	foreach my $key ( keys $peers ) {
 		my $peer = $peers->{$key};
 
@@ -127,7 +128,7 @@ if( defined $opt_o ) {
 			print $peer->{'as'}."\n";
 		} elsif( defined $opt_x ) {
 			next if( defined($opt_AS) && $opt_AS ne $peer->{'as'} );
-			outputPrefixes($peer, $opt_j);
+			push( @optx, outputPrefixes($peer, $opt_j) );
 		} elsif( defined $opt_AS && defined $opt_nagios ) {
 			exit nagios_single($peer);
 		} elsif( defined $opt_nagios ) {
@@ -140,7 +141,13 @@ if( defined $opt_o ) {
 			outputHuman($peer);
 		}
 	}
-	
+
+	if( defined $opt_x ) {
+		foreach my $line ( _uniq( @optx ) ) {
+			print $line."\n";
+		}
+	}
+
 	if( defined $opt_nagios && !defined $opt_AS ) {
 		exit nagios_multi( $nagios );
 	}
@@ -298,7 +305,7 @@ sub outputPrefixes {
 			$str .= "\t".($peer->{'routes'}->{$route}->{'path'} || "");
 		}
 
-		print $str."\n";
+		return $str;
 	}
 }
 
@@ -351,6 +358,10 @@ sub extractRoutes {
 
 #-----------------------------------------------------------------------------
 # Utility
+
+sub _uniq {
+        return keys { map { $_ => 1 } @_ };
+}
 
 sub _query {
 	my ($bird,$query) = @_;

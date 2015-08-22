@@ -38,8 +38,8 @@ Useful arguments for the script - unless otherwise noted can be combined:
 -    `-p`             Output data in perfdata format for graphing
 -    `-n`             Runs as a NAGIOS check, can be combined with `-p`
 -    `-6`             Query on the socket for IPv6 BIRD
--    `-x`             Output a list of accepted prefixes, one per line. Not compatible with `-s`, `-n` or `-p`
--    `-j`             Joe mode, includes the AS Path in the output of `-x`
+-    `-x`             Output a list of unique accepted prefixes, one per line. Not compatible with `-s`, `-n` or `-p`
+-    `-j`             Joe mode, includes the AS Path in the output of `-x`. Multiple entries for a prefix will appear if it appears on multiple sessions with a different AS Path.
 -    `-l`             Output a list of peered ASNs, one per line. Not compatible with any other option
 -    `-o`             Like `-l` but includes originating AS systems for which BIRD has accepted one or more prefixes on
 -    `-f`             Only show peers with one or more filtered routes. Compatible with everything except `-o`
