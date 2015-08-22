@@ -129,9 +129,9 @@ if( defined $opt_o ) {
 		} elsif( defined $opt_x ) {
 			next if( defined($opt_AS) && $opt_AS ne $peer->{'as'} );
 			push( @optx, outputPrefixes($peer, $opt_j) );
-		} elsif( defined $opt_AS && defined $opt_nagios ) {
-			exit nagios_single($peer);
 		} elsif( defined $opt_nagios ) {
+			next if( defined($opt_AS) && $opt_AS ne $peer->{'as'} );
+
 			my $code = nagios_code($peer);
 			$nagios->{$code}->{'count'}++;
 			push( @{$nagios->{$code}->{'peers'}}, $peer );
@@ -148,7 +148,7 @@ if( defined $opt_o ) {
 		}
 	}
 
-	if( defined $opt_nagios && !defined $opt_AS ) {
+	if( defined $opt_nagios ) {
 		exit nagios_multi( $nagios );
 	}
 }
@@ -208,24 +208,6 @@ sub nagios_multi {
 		$nagios_code,
 		$statString,
 		defined($opt_perfdata) ? join(' ', @stats) : undef
-	);
-
-	# Generate output
-	print $retString."\n";
-	return NAGIOS_CODES->{$nagios_code}->{'retcode'};
-}
-
-sub nagios_single {
-	my ($peer) = @_;
-
-	my $nagios_code = nagios_code($peer);
-
-	# Generate Nagios stdout
-	my $retString = nagios_string(
-		$peer->{'name'},
-		$nagios_code,
-		$peer->{'state'},
-		defined($opt_perfdata) ? perfdata($peer) : undef
 	);
 
 	# Generate output
