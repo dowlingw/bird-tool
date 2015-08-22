@@ -196,7 +196,7 @@ sub nagios_multi {
 
 		my @peers = ();
 		foreach my $peer ( @{$results->{$type}->{'peers'}} ) {
-			push( @peers, "AS".$peer->{'as'} );
+			push( @peers, $peer->{'name'} );
 		}
 
 		$statString .= ' '.NAGIOS_CODES->{$type}->{'multi'}.'('. join(',', @peers).')';
@@ -222,7 +222,7 @@ sub nagios_single {
 
 	# Generate Nagios stdout
 	my $retString = nagios_string(
-		'AS'.$peer->{'as'},
+		$peer->{'name'},
 		$nagios_code,
 		$peer->{'state'},
 		defined($opt_perfdata) ? perfdata($peer) : undef
