@@ -71,13 +71,14 @@ By doing this, we can:
 -    Use whatever mechanism you feel comfortable with sending/receiving graphing data across your network
 
 Script arguments explained:
--    `-pre SCRIPT`	Runs the specified executable prior to running
--    `-path PATH`	Path to look for bird-tool output files
--    `-host IPHOST`	IP/Host Name of the BIRD server used to load the bird-tool output file
--    `-6`		Indicates that we are interested in the bird-tool output for IPv6
--    `-index`		(Cacti) Outputs a list of BGP peers in bird-tool output
--    `-query PROPERTY`	(Cacti) Outputs the bird-tool field to be returned for all peers
--    `-get PROPERTY AS`	(Cacti) Outputs the bird-tool field to be returned for the specified AS
+-    `-pre SCRIPT`		Runs the specified executable prior to running
+-    `-path PATH`		Path to look for bird-tool output files
+-    `-host IPHOST`		IP/Host Name of the BIRD server used to load the bird-tool output file
+-    `-6`			Indicates that we are interested in the bird-tool output for IPv6
+-    `-index`			(Cacti) Outputs a list of BGP peers in bird-tool output
+-    `-query PROPERTY`		(Cacti) Outputs the bird-tool field to be returned for all peers
+-    `-get PROPERTY IDX`	(Cacti) Outputs the bird-tool field to be returned for the specified IDX
+-    `-s`			Use 'session' property instead of 'as'.
 
 The `bird_peerinfo.pl` script will look for the file `PATH/IPHOST[_v6]` on the local Cacti host.
 
@@ -88,7 +89,12 @@ How to get started:
 -    Import the XML files as 'Script Data Queries' in Cacti
 -    Profit!
 
-Coming Soon: Full set of templates for BIRD route servers using bird-tool
+PLEASE NOTE - Please use `-s` for new deployments. It will be the default soon.
+
+For those already using this in production without `-s`, you will now see an aggregated value when using `-get`.
+This is due to legacy (broken) code that didn't account for multiple sessions for the same AS.
+
+It's a pain in the butt, but please modify your Cacti graphs to use session name for graphing.
 
 
 
@@ -107,6 +113,3 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-
-
-[![githalytics.com alpha](https://cruel-carlota.pagodabox.com/d9ffa8693e50ac0e1b3469d29b458974 "githalytics.com")](http://githalytics.com/dowlingw/bird-tool)

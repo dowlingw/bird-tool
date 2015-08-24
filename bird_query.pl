@@ -241,6 +241,7 @@ sub perfdata {
 
 	return join(' ',
 		"as=$peer->{'as'}",
+		"session=$peer->{'session_name'}",
 		"state=$peer->{'state'}",
 		"route_tot=$total_routes",
 		"route_accept=$num_routes",

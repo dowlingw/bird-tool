@@ -10,13 +10,14 @@ use Getopt::Long;
 #-----------------------------------------------------------------------------
 # Parse the commandline
 
-our( $opt_6, $opt_pre, $opt_path, $opt_host, $opt_index, $opt_query, @opt_get );
+our( $opt_6, $opt_pre, $opt_path, $opt_host, $opt_index, $opt_query, @opt_get, $opt_s );
 GetOptions(
 	'6',
 	'pre=s',
 	'path=s',
 	'host=s',
 	'index',
+	's',
 	'query=s',
 	'get=s{2}' => \@opt_get
 );
@@ -53,32 +54,43 @@ if( defined $opt_index ) {
 
 sub cmd_index {
 	my ($peer_data) = @_;
+	my $idx = defined($opt_s) ? 'as' : 'session';
 	foreach my $key ( keys %{$peer_data} ) {
-		print $peer_data->{$key}->{'as'}."\n";
+		print $peer_data->{$key}->{$idx}."\n";
 	}
 }
 
 sub cmd_query {
 	my ($peer_data, $type) = @_;
+	my $idx = defined($opt_s) ? 'as' : 'session';
 
 	foreach my $key ( keys %{$peer_data} ) {
 		my $peer = $peer_data->{$key};
 
 		my $value = $peer->{$type} || '0';
-		print join( '!', $peer->{'as'}, $value )."\n";
+		print join( '!', $peer->{$idx}, $value )."\n";
 	}
 }
 
 sub cmd_get {
 	my ($peer_data,$type,$as) = @_;
-	die "Invalid AS" unless( defined $peer_data->{$as} );
+	my $idx = defined($opt_s) ? 'as' : 'session';
 
-	# Validation
-	die "Peer not found" unless defined( $peer_data->{$as} );
-	die "Value not found for peer" unless defined( $peer_data->{$as}->{$type} );
+	my $value = 0;
+	my $set = 0;
+	foreach my $key ( keys %{$peer_data} ) {
+		my $peer = $peer_data->{$key};
+
+		next unless( $peer->{$idx} eq $as );
+		next unless( defined $peer->{$type} );
+
+		$value += $peer->{$type};
+		$set++;
+	}
+
+	die "Invalid AS/Session" unless( $set > 0 );
 	
-	# Show the field we want
-	print $peer_data->{$as}->{$type};
+	print $value;
 }
 
 #-----------------------------------------------------------------------------
@@ -97,18 +109,19 @@ sub get_host_data {
 			$peer->{$key} = $value;
 		}
 
-		die "Peer data missing 'as' property" unless defined $peer->{'as'};
-		$data->{$peer->{'as'}} = $peer;
+		die "Peer data missing 'session' property" unless defined $peer->{'session'};
+		$data->{$peer->{'session'}} = $peer;
 	}
 	close( FH );
 
 	# Provide a virtual peer 'ALL'
-	my $vpeer = { 'as' => 'ALL' };
+	my $vpeer = { 'as' => 'ALL', 'session' => 'ALL' };
 	foreach my $key ( keys %{$data} ) {
 		my $peer = $data->{$key};
 
 		foreach my $pk( keys %{$peer} ) {
 			next if( $pk eq 'as' );
+			next if( $pk eq 'session' );
 			next unless( $peer->{$pk} =~ m/^\d+$/ );
 			unless( defined $vpeer->{$pk} ) {
 				$vpeer->{$pk} = 0;
