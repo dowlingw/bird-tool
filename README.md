@@ -78,7 +78,6 @@ Script arguments explained:
 -    `-index`			(Cacti) Outputs a list of BGP peers in bird-tool output
 -    `-query PROPERTY`		(Cacti) Outputs the bird-tool field to be returned for all peers
 -    `-get PROPERTY IDX`	(Cacti) Outputs the bird-tool field to be returned for the specified IDX
--    `-s`			Use 'session' property instead of 'as'.
 
 The `bird_peerinfo.pl` script will look for the file `PATH/IPHOST[_v6]` on the local Cacti host.
 
@@ -89,13 +88,7 @@ How to get started:
 -    Import the XML files as 'Script Data Queries' in Cacti
 -    Profit!
 
-PLEASE NOTE - Please use `-s` for new deployments. It will be the default soon.
-
-For those already using this in production without `-s`, you will now see an aggregated value when using `-get`.
-This is due to legacy (broken) code that didn't account for multiple sessions for the same AS.
-
-It's a pain in the butt, but please modify your Cacti graphs to use session name for graphing.
-
+Please be aware that the behaviour of this has recently changed, and now presents Cacti with data per session name, instead of per AS.
 
 
 Copyright and license
