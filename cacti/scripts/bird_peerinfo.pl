@@ -54,7 +54,7 @@ if( defined $opt_index ) {
 sub cmd_index {
 	my ($peer_data) = @_;
 	foreach my $key ( keys %{$peer_data} ) {
-		print $peer_data->{$key}->{'as'}."\n";
+		print $peer_data->{$key}->{'session'}."\n";
 	}
 }
 
@@ -65,20 +65,20 @@ sub cmd_query {
 		my $peer = $peer_data->{$key};
 
 		my $value = $peer->{$type} || '0';
-		print join( '!', $peer->{'as'}, $value )."\n";
+		print join( '!', $peer->{'session'}, $value )."\n";
 	}
 }
 
 sub cmd_get {
-	my ($peer_data,$type,$as) = @_;
-	die "Invalid AS" unless( defined $peer_data->{$as} );
+	my ($peer_data,$type,$session) = @_;
+	die "Invalid Session" unless( defined $peer_data->{$session} );
 
 	# Validation
-	die "Peer not found" unless defined( $peer_data->{$as} );
-	die "Value not found for peer" unless defined( $peer_data->{$as}->{$type} );
+	die "Peer not found" unless defined( $peer_data->{$session} );
+	die "Value not found for peer" unless defined( $peer_data->{$session}->{$type} );
 	
 	# Show the field we want
-	print $peer_data->{$as}->{$type};
+	print $peer_data->{$session}->{$type};
 }
 
 #-----------------------------------------------------------------------------
@@ -97,26 +97,10 @@ sub get_host_data {
 			$peer->{$key} = $value;
 		}
 
-		die "Peer data missing 'as' property" unless defined $peer->{'as'};
-		$data->{$peer->{'as'}} = $peer;
+		die "Peer data missing 'session' property" unless defined $peer->{'session'};
+		$data->{$peer->{'session'}} = $peer;
 	}
 	close( FH );
-
-	# Provide a virtual peer 'ALL'
-	my $vpeer = { 'as' => 'ALL' };
-	foreach my $key ( keys %{$data} ) {
-		my $peer = $data->{$key};
-
-		foreach my $pk( keys %{$peer} ) {
-			next if( $pk eq 'as' );
-			next unless( $peer->{$pk} =~ m/^\d+$/ );
-			unless( defined $vpeer->{$pk} ) {
-				$vpeer->{$pk} = 0;
-			}
-			$vpeer->{$pk} += $peer->{$pk};
-		}
-	}
-	$data->{'ALL'} = $vpeer;
 
 	return $data;
 }
