@@ -286,6 +286,7 @@ sub outputHuman {
 sub outputPrefixes {
 	my ($peer, $opt_j) = @_;
 
+	my @prefixes = ();
 	foreach my $route ( keys $peer->{'routes'} ) {
 		my $str = $route;
 
@@ -293,8 +294,10 @@ sub outputPrefixes {
 			$str .= "\t".($peer->{'routes'}->{$route}->{'path'} || "");
 		}
 
-		return $str;
+		push(@prefixes, $str);
 	}
+
+	return @prefixes;
 }
 
 #-----------------------------------------------------------------------------
