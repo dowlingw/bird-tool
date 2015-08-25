@@ -153,7 +153,7 @@ if( defined $opt_o ) {
 		}
 	}
 
-	if( defined $opt_perfdata && ! defined defined $opt_AS ) {
+	if( defined $opt_perfdata && ! defined $opt_AS ) {
 			print globalperfdata()."\n";
 	}
 
@@ -258,8 +258,7 @@ sub globalperfdata {
 		"session=ALL",
 		"route_tot=$total_routes",
 		"route_accept=$num_routes",
-		"route_filtered=$num_filtered_routes",
-		"uptime=$uptime"
+		"route_filtered=$num_filtered_routes"
 	);
 }
 
