@@ -10,14 +10,13 @@ use Getopt::Long;
 #-----------------------------------------------------------------------------
 # Parse the commandline
 
-our( $opt_6, $opt_pre, $opt_path, $opt_host, $opt_index, $opt_query, @opt_get, $opt_s );
+our( $opt_6, $opt_pre, $opt_path, $opt_host, $opt_index, $opt_query, @opt_get );
 GetOptions(
 	'6',
 	'pre=s',
 	'path=s',
 	'host=s',
 	'index',
-	's',
 	'query=s',
 	'get=s{2}' => \@opt_get
 );
@@ -54,43 +53,32 @@ if( defined $opt_index ) {
 
 sub cmd_index {
 	my ($peer_data) = @_;
-	my $idx = defined($opt_s) ? 'as' : 'session';
 	foreach my $key ( keys %{$peer_data} ) {
-		print $peer_data->{$key}->{$idx}."\n";
+		print $peer_data->{$key}->{'session'}."\n";
 	}
 }
 
 sub cmd_query {
 	my ($peer_data, $type) = @_;
-	my $idx = defined($opt_s) ? 'as' : 'session';
 
 	foreach my $key ( keys %{$peer_data} ) {
 		my $peer = $peer_data->{$key};
 
 		my $value = $peer->{$type} || '0';
-		print join( '!', $peer->{$idx}, $value )."\n";
+		print join( '!', $peer->{'session'}, $value )."\n";
 	}
 }
 
 sub cmd_get {
-	my ($peer_data,$type,$as) = @_;
-	my $idx = defined($opt_s) ? 'as' : 'session';
+	my ($peer_data,$type,$session) = @_;
+	die "Invalid Session" unless( defined $peer_data->{$session} );
 
-	my $value = 0;
-	my $set = 0;
-	foreach my $key ( keys %{$peer_data} ) {
-		my $peer = $peer_data->{$key};
-
-		next unless( $peer->{$idx} eq $as );
-		next unless( defined $peer->{$type} );
-
-		$value += $peer->{$type};
-		$set++;
-	}
-
-	die "Invalid AS/Session" unless( $set > 0 );
+	# Validation
+	die "Peer not found" unless defined( $peer_data->{$session} );
+	die "Value not found for peer" unless defined( $peer_data->{$session}->{$type} );
 	
-	print $value;
+	# Show the field we want
+	print $peer_data->{$session}->{$type};
 }
 
 #-----------------------------------------------------------------------------
