@@ -116,6 +116,7 @@ if( defined $opt_o ) {
 	outputOriginAs($peers);
 } else {
 	my $nagios = {}; map { $nagios->{$_} = { 'count' => 0, 'peers' => [] } } keys NAGIOS_CODES;
+	my @optl = ();
 	my @optx = ();
 	foreach my $key ( keys $peers ) {
 		my $peer = $peers->{$key};
@@ -125,7 +126,7 @@ if( defined $opt_o ) {
 		}
 	
 		if( defined $opt_l ) {
-			print $peer->{'as'}."\n";
+			push( @optl, $peer->{'as'} );
 		} elsif( defined $opt_x ) {
 			next if( defined($opt_AS) && $opt_AS ne $peer->{'as'} );
 			push( @optx, outputPrefixes($peer, $opt_j) );
@@ -142,7 +143,11 @@ if( defined $opt_o ) {
 		}
 	}
 
-	if( defined $opt_x ) {
+	if( defined $opt_l ) {
+		foreach my $as ( _uniq( @optl ) ) {
+			print $as."\n";
+		}
+	} elsif( defined $opt_x ) {
 		foreach my $line ( _uniq( @optx ) ) {
 			print $line."\n";
 		}

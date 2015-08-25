@@ -32,7 +32,6 @@ Currently assumes all interesting session names begin with R_AS - this can easil
 
 Useful arguments for the script - unless otherwise noted can be combined:
 -    `-help`          Display full usage information
--    `-l`             Output a list of peered ASNs, one per line. Not compatible with any other option
 -    `-a ASNUM`       Only query session information for the specified AS Number
 -    `-s`             Show filtered/accepted prefixes, not compatible with `-n` or `-p`
 -    `-p`             Output data in perfdata format for graphing
