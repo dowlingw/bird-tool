@@ -153,6 +153,10 @@ if( defined $opt_o ) {
 		}
 	}
 
+	if( defined $opt_perfdata && ! defined defined $opt_AS ) {
+			print globalperfdata()."\n";
+	}
+
 	if( defined $opt_nagios ) {
 		exit nagios_multi( $nagios );
 	}
@@ -234,6 +238,29 @@ sub nagios_string {
 	}
 
 	return $str;
+}
+
+sub globalperfdata {
+	my @all_routes_accept = ();
+	my @all_routes_filtered = ();
+	
+	foreach ( keys $peers ) {
+		push( @all_routes_accept, keys $peers->{$_}->{'routes'} );
+		push( @all_routes_filtered, keys $peers->{$_}->{'filtered_routes'} );
+	}
+
+	my $num_routes = scalar _uniq( @all_routes_accept );
+	my $num_filtered_routes = scalar _uniq( @all_routes_filtered );
+	my $total_routes = $num_routes + $num_filtered_routes;
+
+	return join(' ',
+		"as=ALL",
+		"session=ALL",
+		"route_tot=$total_routes",
+		"route_accept=$num_routes",
+		"route_filtered=$num_filtered_routes",
+		"uptime=$uptime"
+	);
 }
 
 sub perfdata {
