@@ -76,7 +76,7 @@ Script arguments explained:
 -    `-6`			Indicates that we are interested in the bird-tool output for IPv6
 -    `-index`			(Cacti) Outputs a list of BGP peers in bird-tool output
 -    `-query PROPERTY`		(Cacti) Outputs the bird-tool field to be returned for all peers
--    `-get PROPERTY IDX`	(Cacti) Outputs the bird-tool field to be returned for the specified IDX
+-    `-get PROPERTY SESSION`	(Cacti) Outputs the bird-tool field to be returned for the specified session name
 
 The `bird_peerinfo.pl` script will look for the file `PATH/IPHOST[_v6]` on the local Cacti host.
 
