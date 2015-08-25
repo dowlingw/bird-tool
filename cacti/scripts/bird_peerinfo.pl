@@ -102,22 +102,5 @@ sub get_host_data {
 	}
 	close( FH );
 
-	# Provide a virtual peer 'ALL'
-	my $vpeer = { 'as' => 'ALL', 'session' => 'ALL' };
-	foreach my $key ( keys %{$data} ) {
-		my $peer = $data->{$key};
-
-		foreach my $pk( keys %{$peer} ) {
-			next if( $pk eq 'as' );
-			next if( $pk eq 'session' );
-			next unless( $peer->{$pk} =~ m/^\d+$/ );
-			unless( defined $vpeer->{$pk} ) {
-				$vpeer->{$pk} = 0;
-			}
-			$vpeer->{$pk} += $peer->{$pk};
-		}
-	}
-	$data->{'ALL'} = $vpeer;
-
 	return $data;
 }
