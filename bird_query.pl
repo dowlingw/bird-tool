@@ -205,7 +205,7 @@ sub nagios_multi {
 
 		my @peers = ();
 		foreach my $peer ( @{$results->{$type}->{'peers'}} ) {
-			push( @peers, $peer->{'name'} );
+			push( @peers, $peer->{'session_name'} );
 		}
 
 		$statString .= ' '.NAGIOS_CODES->{$type}->{'multi'}.'('. join(',', @peers).')';
