@@ -29,7 +29,7 @@ use constant ROUTE_PREFIX => 'R_AS';
 use constant ROUTE_SUFFIX => 'x*';
 
 # Get any commandline arguments
-our( $opt_AS, $opt_showroutes, $opt_perfdata, $opt_nagios, $opt_6, $opt_help, $opt_x, $opt_l, $opt_j, $opt_o, $opt_f, $opt_yolo );
+our( $opt_AS, $opt_showroutes, $opt_perfdata, $opt_nagios, $opt_6, $opt_help, $opt_x, $opt_l, $opt_j, $opt_o, $opt_f, $opt_yolo, $opt_debug );
 GetOptions(
 	'AS=i',
 	'showroutes',
@@ -42,6 +42,7 @@ GetOptions(
 	'o',
 	'f',
 	'yolo',
+	'debug',
 	'help|?'
 );
 pod2usage(1) if $opt_help;
@@ -86,27 +87,32 @@ foreach my $result ( _query($bird,$query) ) {
 	};
 }
 
-# Get list of accepted routes
-foreach my $key ( keys $peers ) {
-	my $peer = $peers->{$key};
-
-	my $query = "show route table master protocol ".$peer->{'session_name'}." all";
-	$peers->{$key}->{'routes'} = extractRoutes( _query($bird,$query) );
-}
-
-# Get list of filtered routes
-foreach my $key ( keys $peers ) {
-	my $peer = $peers->{$key};
-
-	my $query = "show route protocol ".$peer->{'session_name'};
-	my $routes = extractRoutes( _query($bird,$query) );
-
-	# List this as filtered if it wasnt in the list of accepted routes
-	foreach my $route ( keys $routes ) {
-		next if( exists $peer->{'routes'}->{$route} );
-		$peer->{'filtered_routes'}->{$route} = $routes->{$route};
+# Don't grab prefixes unless needed
+my $want_routes = defined($opt_showroutes) || defined($opt_perfdata) || defined($opt_x) || defined($opt_o) || defined($opt_f);
+if( $want_routes ) {
+	# Get list of accepted routes
+	foreach my $key ( keys $peers ) {
+		my $peer = $peers->{$key};
+	
+		my $query = "show route table master protocol ".$peer->{'session_name'}." all";
+		$peers->{$key}->{'routes'} = extractRoutes( _query($bird,$query) );
+	}
+	
+	# Get list of filtered routes
+	foreach my $key ( keys $peers ) {
+		my $peer = $peers->{$key};
+	
+		my $query = "show route protocol ".$peer->{'session_name'};
+		my $routes = extractRoutes( _query($bird,$query) );
+	
+		# List this as filtered if it wasnt in the list of accepted routes
+		foreach my $route ( keys $routes ) {
+			next if( exists $peer->{'routes'}->{$route} );
+			$peer->{'filtered_routes'}->{$route} = $routes->{$route};
+		}
 	}
 }
+
 
 
 #-----------------------------------------------------------------------------
@@ -382,6 +388,11 @@ sub _uniq {
 
 sub _query {
 	my ($bird,$query) = @_;
+
+	if( defined $opt_debug ) {
+		print "DEBUG: ".$query."\n";
+	}
+
 	my @result = $bird->long_cmd($query);
 	chomp @result;
 	return @result;
@@ -440,7 +451,7 @@ Output data in perfdata format for graphing
 
 =item B<-n>
 
-Runs as a NAGIOS check, can be combined with -p
+Runs as a NAGIOS check, can be combined with -p and -a
 
 =item B<-6>
 
@@ -469,3 +480,7 @@ Only show peers with one or more filtered routes. Compatible with everything exc
 =item B<-y>
 
 Yolo mode. Only compatible with -s, doesn't show accepted prefixes because life's too short.
+
+=item B<-d>
+
+Debug mode. Show the commands being executed against birdc.

@@ -35,7 +35,7 @@ Useful arguments for the script - unless otherwise noted can be combined:
 -    `-a ASNUM`       Only query session information for the specified AS Number
 -    `-s`             Show filtered/accepted prefixes, not compatible with `-n` or `-p`
 -    `-p`             Output data in perfdata format for graphing
--    `-n`             Runs as a NAGIOS check, can be combined with `-p`
+-    `-n`             Runs as a NAGIOS check, can be combined with `-p` and `-a`
 -    `-6`             Query on the socket for IPv6 BIRD
 -    `-x`             Output a list of unique accepted prefixes, one per line. Not compatible with `-s`, `-n` or `-p`
 -    `-j`             Joe mode, includes the AS Path in the output of `-x`. Multiple entries for a prefix will appear if it appears on multiple sessions with a different AS Path.
@@ -43,6 +43,7 @@ Useful arguments for the script - unless otherwise noted can be combined:
 -    `-o`             Like `-l` but includes originating AS systems for which BIRD has accepted one or more prefixes on
 -    `-f`             Only show peers with one or more filtered routes. Compatible with everything except `-o`
 -    `-y`             Yolo mode. Only compatible with `-s`, doesn't show accepted prefixes because life's too short.
+-    `-d`             Debug mode. Show the commands being executed against birdc.
 
 This module now provides its own IPC with BIRD daemon via the birdc command.
 
