@@ -88,8 +88,7 @@ foreach my $result ( _query($bird,$query) ) {
 }
 
 # Don't grab prefixes unless needed
-my $want_routes = defined($opt_showroutes) || defined($opt_perfdata) || defined($opt_x) || defined($opt_o) || defined($opt_f);
-if( $want_routes ) {
+unless( $opt_nagios ) {
 	# Get list of accepted routes
 	foreach my $key ( keys $peers ) {
 		my $peer = $peers->{$key};
