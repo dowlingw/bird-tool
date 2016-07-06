@@ -88,7 +88,7 @@ $tt->process($opt_template, $args ) || die $tt->error();
 
 sub validate_nestring {
 	my ($input) = @_;
-	return (defined $input && $input =~ /^\w+$/);
+	return (defined $input && $input =~ /^[\w\-]+$/);
 }
 
 sub validate_numeric {
