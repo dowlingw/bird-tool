@@ -23,8 +23,8 @@ use constant NAGIOS_CODES => {
 #-----------------------------------------------------------------------------
 # Initialisation
 
-use constant BIRD4_SOCKET => '/var/run/bird.ctl';
-use constant BIRD6_SOCKET => '/var/run/bird6.ctl';
+use constant BIRD4_SOCKET => '/var/run/bird/bird.ctl';
+use constant BIRD6_SOCKET => '/var/run/bird/bird6.ctl';
 use constant ROUTE_PREFIX => 'R_AS';
 use constant ROUTE_SUFFIX => 'x*';
 
@@ -90,7 +90,7 @@ foreach my $result ( _query($bird,$query) ) {
 # Don't grab prefixes unless needed
 unless( $opt_nagios ) {
 	# Get list of accepted routes
-	foreach my $key ( keys $peers ) {
+	foreach my $key ( keys %{$peers} ) {
 		my $peer = $peers->{$key};
 	
 		my $query = "show route table master protocol ".$peer->{'session_name'}." all";
@@ -98,14 +98,14 @@ unless( $opt_nagios ) {
 	}
 	
 	# Get list of filtered routes
-	foreach my $key ( keys $peers ) {
+	foreach my $key ( keys %{$peers} ) {
 		my $peer = $peers->{$key};
 	
 		my $query = "show route protocol ".$peer->{'session_name'};
 		my $routes = extractRoutes( _query($bird,$query) );
 	
 		# List this as filtered if it wasnt in the list of accepted routes
-		foreach my $route ( keys $routes ) {
+		foreach my $route ( keys %{$routes} ) {
 			next if( exists $peer->{'routes'}->{$route} );
 			$peer->{'filtered_routes'}->{$route} = $routes->{$route};
 		}
@@ -120,14 +120,14 @@ unless( $opt_nagios ) {
 if( defined $opt_o ) {
 	outputOriginAs($peers);
 } else {
-	my $nagios = {}; map { $nagios->{$_} = { 'count' => 0, 'peers' => [] } } keys NAGIOS_CODES;
+	my $nagios = {}; map { $nagios->{$_} = { 'count' => 0, 'peers' => [] } } keys %{(NAGIOS_CODES)};
 	my @optl = ();
 	my @optx = ();
-	foreach my $key ( keys $peers ) {
+	foreach my $key ( keys %{$peers} ) {
 		my $peer = $peers->{$key};
 
 		if( defined $opt_f ) {
-			next unless( scalar keys $peer->{'filtered_routes'} > 0 );
+			next unless( scalar keys %{$peer->{'filtered_routes'}} > 0 );
 		}
 	
 		if( defined $opt_l ) {
@@ -175,12 +175,12 @@ sub outputOriginAs {
 	my ($peers) = @_;
 
 	my $as_list = {};
-	foreach my $pKey ( keys $peers ) {
+	foreach my $pKey ( keys %{$peers} ) {
 		my $peer = $peers->{$pKey};
 
 		$as_list->{$peer->{'as'}} = 1;
 
-		foreach my $rKey ( keys $peer->{'routes'} ) {
+		foreach my $rKey ( keys %{$peer->{'routes'}} ) {
 			my $route = $peer->{'routes'}->{$rKey};
 
 			$as_list->{$route->{'origin_as'}} = 1;
@@ -200,11 +200,11 @@ sub nagios_multi {
 	$nagios_code = 'critical' if( $results->{'critical'}->{'count'} > 0 );
 
 	# Generate keyvalue pairs for output
-	my @stats = map { join('=',NAGIOS_CODES->{$_}->{'multi'},$results->{$_}->{'count'}) } keys $results;
+	my @stats = map { join('=',NAGIOS_CODES->{$_}->{'multi'},$results->{$_}->{'count'}) } keys %{$results};
 	my $statString = join('; ', @stats).'.';
 
 	# List any busted AS by category
-	foreach my $type ( keys $results ) {
+	foreach my $type ( keys %{$results} ) {
 		next if( $type eq 'ok' );
 		next unless( scalar @{$results->{$type}->{'peers'}} > 0 );
 
@@ -249,9 +249,9 @@ sub globalperfdata {
 	my @all_routes_accept = ();
 	my @all_routes_filtered = ();
 	
-	foreach ( keys $peers ) {
-		push( @all_routes_accept, keys $peers->{$_}->{'routes'} );
-		push( @all_routes_filtered, keys $peers->{$_}->{'filtered_routes'} );
+	foreach ( keys %{$peers} ) {
+		push( @all_routes_accept, keys %{$peers->{$_}->{'routes'}} );
+		push( @all_routes_filtered, keys %{$peers->{$_}->{'filtered_routes'}} );
 	}
 
 	my $num_routes = scalar _uniq( @all_routes_accept );
@@ -270,8 +270,8 @@ sub globalperfdata {
 sub perfdata {
 	my ($peer) = @_;
 
-	my $num_routes = scalar keys $peer->{'routes'};
-	my $num_filtered_routes = scalar keys $peer->{'filtered_routes'};
+	my $num_routes = scalar keys %{$peer->{'routes'}};
+	my $num_filtered_routes = scalar keys %{$peer->{'filtered_routes'}};
 	my $total_routes = $num_routes + $num_filtered_routes;
 	my $uptime = $peer->{'uptime'}->in_units('seconds');
 
@@ -289,8 +289,8 @@ sub perfdata {
 sub outputHuman {
 	my ($peer) = @_;
 
-	my $num_routes = scalar keys $peer->{'routes'};
-	my $num_filtered_routes = scalar keys $peer->{'filtered_routes'};
+	my $num_routes = scalar keys %{$peer->{'routes'}};
+	my $num_filtered_routes = scalar keys %{$peer->{'filtered_routes'}};
 	my $total_routes = $num_routes + $num_filtered_routes;
 
 	print "Autonomous System: $peer->{'as'}\n";
@@ -301,13 +301,13 @@ sub outputHuman {
 	print "\tTotal routes: $total_routes\n";
 	print "\tAccepted routes: $num_routes\n";
 	if( $opt_showroutes && ! $opt_yolo ) {
-		foreach my $route ( keys $peer->{'routes'} ) {
+		foreach my $route ( keys %{$peer->{'routes'}} ) {
 			print "\t\t$route via $peer->{'routes'}->{$route}->{'origin_as'}\n"
 		}
 	}
 	print "\tFiltered routes: $num_filtered_routes\n";
 	if( $opt_showroutes ) {
-		foreach my $route ( keys $peer->{'filtered_routes'} ) {
+		foreach my $route ( keys %{$peer->{'filtered_routes'}} ) {
 			print "\t\t$route via $peer->{'filtered_routes'}->{$route}->{'origin_as'}\n"
 		}
 	}
@@ -318,7 +318,7 @@ sub outputPrefixes {
 	my ($peer, $opt_j) = @_;
 
 	my @prefixes = ();
-	foreach my $route ( keys $peer->{'routes'} ) {
+	foreach my $route ( keys %{$peer->{'routes'}} ) {
 		my $str = $route;
 
 		if( defined $opt_j ) {
@@ -382,7 +382,7 @@ sub extractRoutes {
 # Utility
 
 sub _uniq {
-        return keys { map { $_ => 1 } @_ };
+        return keys %{{ map { $_ => 1 } @_ }};
 }
 
 sub _query {

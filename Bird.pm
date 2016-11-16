@@ -61,7 +61,7 @@ sub long_cmd {
 
 sub cmd {
 	my ($self, $command) = @_;
-	return pop $self->long_cmd($command);
+	return pop @{$self->long_cmd($command)};
 }
 
 
