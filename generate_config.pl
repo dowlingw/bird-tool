@@ -48,6 +48,13 @@ $args->{'peer_ip'} = $term->get_reply(
 	'allow'  => \&validate_ip
 );
 
+$args->{'ixp_template'} = $term->get_reply(
+	'prompt' => 'IXP Template Name: ',
+	'allow'  => \&validate_nestring,
+	'default' => 'WAIX'
+);
+
+
 while( 1 ) {
 	my $next_as = $term->get_reply(
 		'prompt' => 'Next AS in Path (or enter to finish): ',

@@ -29,7 +29,7 @@ protocol pipe P_AS[% peer_asn %] from PIPES {
         export where bgp_out([% peer_asn %], false);
 }
 
-protocol bgp R_AS[% peer_asn %]x1 from WAIX {
+protocol bgp R_AS[% peer_asn %]x1 from [% ixp_template %] {
         description "RIB for AS[% peer_asn %] - [% peer_name %]";
         debug { states, events };
         neighbor [% peer_ip %] as [% peer_asn %];
