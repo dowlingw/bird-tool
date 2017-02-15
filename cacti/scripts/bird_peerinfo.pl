@@ -41,7 +41,7 @@ if( defined $opt_index ) {
 	cmd_index( $peer_data );
 } elsif( defined $opt_query ) {
 	cmd_query( $peer_data, $opt_query );
-} elsif( defined @opt_get ) {
+} elsif( scalar @opt_get == 2 ) {
 	cmd_get( $peer_data, $opt_get[0], $opt_get[1] );
 } else {
 	die "Invalid usage";
